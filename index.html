@@ -205,18 +205,18 @@
                 calculateTotalPoints();
             };
 
-         const drawCharts = (topicData, scores) => {
+        const drawCharts = (topicData, scores) => {
                 const ctxTopic = document.getElementById('topicChart').getContext('2d');
                 const labels = Object.keys(topicData);
                 const data = labels.map(t => topicData[t].possible === 0 ? 0 : ((topicData[t].earned / topicData[t].possible) * 100).toFixed(1));
 
                 // **********************************************
-                // ✅ GÜNCELLENMİŞ DİNAMİK BOŞLUK HESAPLAMA
+                // ✅ YENİ YÖNTEM: Y-EKSENİ GENİŞLİĞİNİ ZORLAMA
                 const longestLabelLength = labels.reduce((max, label) => Math.max(max, label.length), 0);
                 
-                // Formül güncellendi: Karakter başına 5 piksel (daha tutucu) + 10 piksel sabit boşluk.
-                // Minimum boşluk 60 piksel olarak ayarlandı.
-                const dynamicPadding = Math.max(60, (longestLabelLength * 5) + 10); 
+                // Karakter başına 7 piksel + 20 piksel buffer kullanarak gerekli genişliği hesaplar.
+                // Bu değer, callback içinde kullanılacak.
+                const requiredWidth = Math.max(80, (longestLabelLength * 7) + 20); 
                 // **********************************************
 
                 if (topicChartInstance) topicChartInstance.destroy();
@@ -230,13 +230,18 @@
                         plugins: { 
                             legend: { display: false } 
                         },
-                        layout: {
-                            padding: {
-                                left: dynamicPadding // Yeni, güvenli değer burada kullanılıyor.
-                            }
-                        }, 
+                        // Artık layout.padding yerine scales.y kullanıyoruz.
                         scales: { 
-                            x: { min: 0, max: 100 } 
+                            x: { min: 0, max: 100 },
+                            y: {
+                                // Bu callback, Chart.js'e y ekseninin min. genişliğini bildirir.
+                                afterBuildTicks: function(chart) {
+                                    // chart.width = hesapladığımız dinamik genişlik
+                                    chart.width = requiredWidth;
+                                    // Gerekirse Chart.js'in varsayılan genişliğini de ayarlayabiliriz.
+                                    chart.min = requiredWidth; 
+                                }
+                            }
                         } 
                     }
                 });
@@ -368,5 +373,6 @@
     </script>
 </body>
 </html>
+
 
 
