@@ -25,7 +25,6 @@
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc; 
             color: #334155;
-            /* user-select: none kaldırıldı */
         }
 
         .step-active { border-bottom: 3px solid #2563eb; color: #1e40af; font-weight: 700; }
@@ -47,10 +46,6 @@
         }
     </style>
     
-    <script>
-        /* F12, Ctrl+Shift+I gibi geliştirici araçlarını engelleyen kodlar kaldırıldı. */
-    </script>
-
 </head>
 <body class="p-4 md:p-8 min-h-screen">
 
@@ -330,7 +325,6 @@
                 
                 clearAllData: function() { if(confirm("Tüm veriler silinecek?")) { localStorage.removeItem(SK_STUDENTS); localStorage.removeItem(SK_QUESTIONS); location.reload(); } },
                 
-                // ✅ Ziyaretçi sayacı (updateVisitCount) tamamen kaldırıldı.
                 init: function() { 
                     loadFromStorage(); 
                     if(questions.length===0) this.addQuestionInput(); 
@@ -339,7 +333,7 @@
             };
         })();
         
-        // ✅ HATA DÜZELTİLDİ: window.onload içindeki 'this' bağlamı sorunu giderildi (TypeError önlendi).
+        // HATA DÜZELTİLDİ: window.onload içindeki 'this' bağlamı sorunu giderildi (TypeError önlendi).
         window.onload = SystemCore.init.bind(SystemCore);
     </script>
 </body>
