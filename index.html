@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+<script>
+  // Canvas / sandbox önizleme hatasını engellemek için kontrol eklendi
+  if (!location.href.includes('sandbox') && location.hostname !== '')
+  (function(){
+    const url = new URL(window.location);
+    if(!url.searchParams.get('v')){
+      url.searchParams.set('v', Date.now());
+      window.location.replace(url.toString());
+    }
+  })();
+</script>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -182,7 +193,7 @@
         </div>
     </div>
 
-    <div class="max-w-6xl mx-auto mt-6 p-4 text-center text-xs text-gray-500 no-print">&copy; 2025. Tüm Hakları Saklıdır. Bu araç <strong>[Ö.S]</strong> tarafından geliştirilmiştir.</div>
+    <div class="max-w-6xl mx-auto mt-6 p-4 text-center text-xs text-gray-500 no-print">&copy; 2024. Tüm Hakları Saklıdır. Bu araç <strong>[Geliştirici Adı / Okul Adı]</strong> tarafından geliştirilmiştir.</div>
 
     <!-- Improved script logic (responsiveness & accessibility kept) -->
     <script>
@@ -313,4 +324,3 @@
     </script>
 </body>
 </html>
-
