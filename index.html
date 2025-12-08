@@ -43,8 +43,7 @@
             }
             .no-print { display: none !important; }
             .print-break-inside { break-inside: avoid; }
-            /* Grafiklerin max yüksekliği ayarlandı */
-            canvas { max-height: 350px !important; } 
+            canvas { max-height: 300px !important; }
         }
     </style>
     
@@ -125,7 +124,6 @@
                 <h2 class="text-lg font-semibold text-gray-800 uppercase" id="reportYear"></h2>
                 <h3 class="text-md font-medium text-gray-700 mt-2" id="reportLesson">SINAV ANALİZ RAPORU</h3>
             </div>
-            
             <div class="grid grid-cols-5 gap-4 mb-8 text-center print-break-inside">
                 <div class="border border-gray-300 p-2 rounded bg-gray-50"><div class="text-[10px] text-gray-500 uppercase font-bold">Öğrenci</div><div class="text-xl font-bold text-gray-800" id="statStudents">0</div></div>
                 <div class="border border-gray-300 p-2 rounded bg-gray-50"><div class="text-[10px] text-gray-500 uppercase font-bold">Ortalama</div><div class="text-xl font-bold text-blue-700" id="statAverage">0</div></div>
@@ -133,7 +131,6 @@
                 <div class="border border-gray-300 p-2 rounded bg-gray-50"><div class="text-[10px] text-gray-500 uppercase font-bold">En Düşük</div><div class="text-xl font-bold text-red-700" id="statMin">0</div></div>
                 <div class="border border-gray-300 p-2 rounded bg-gray-50"><div class="text-[10px] text-gray-500 uppercase font-bold">Başarı %</div><div class="text-xl font-bold text-black" id="statPassRate">%0</div></div>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 print-break-inside">
                 <div>
                     <h4 class="font-bold text-sm uppercase border-b border-gray-400 mb-2 pb-1">1. Konu/Kazanım Analizi</h4>
@@ -142,20 +139,11 @@
                         <tbody id="questionAnalysisBody"></tbody>
                     </table>
                 </div>
-                
                 <div class="flex flex-col gap-4">
-                    <div>
-                        <h4 class="font-bold text-sm uppercase border-b border-gray-400 mb-2 pb-1">2. Not Dağılım Grafiği</h4>
-                        <div class="h-48 flex justify-center"><canvas id="distributionChart"></canvas></div>
-                    </div>
+                    <div><h4 class="font-bold text-sm uppercase border-b border-gray-400 mb-2 pb-1">2. Konu Başarı Grafiği</h4><div class="h-40 flex justify-center"><canvas id="topicChart"></canvas></div></div>
+                    <div><h4 class="font-bold text-sm uppercase border-b border-gray-400 mb-2 pb-1">3. Not Dağılım Grafiği</h4><div class="h-32 flex justify-center"><canvas id="distributionChart"></canvas></div></div>
                 </div>
             </div>
-
-            <div class="mb-8 print-break-inside">
-                <h4 class="font-bold text-sm uppercase border-b border-gray-400 mb-2 pb-1">3. Konu Başarı Grafiği</h4>
-                <div class="w-full flex justify-center min-h-[300px]"><canvas id="topicChart"></canvas></div>
-            </div>
-
             <div id="smartRecommendations" class="mb-6 space-y-2 text-sm text-gray-700 print-break-inside"></div>
             <div class="mb-8 print-break-inside">
                 <h4 class="font-bold text-sm uppercase border-b border-gray-400 mb-2 pb-1">4. Genel Değerlendirme ve Sonuç</h4>
@@ -217,14 +205,18 @@
                 calculateTotalPoints();
             };
 
-         const drawCharts = (topicData, scores) => {
+       const drawCharts = (topicData, scores) => {
                 const ctxTopic = document.getElementById('topicChart').getContext('2d');
                 const labels = Object.keys(topicData);
                 const data = labels.map(t => topicData[t].possible === 0 ? 0 : ((topicData[t].earned / topicData[t].possible) * 100).toFixed(1));
 
-                // Dinamik Sol Boşluk Hesaplama (Grafik yazılarının sığması için)
+                // **********************************************
+                // DİNAMİK HESAPLAMA
                 const longestLabelLength = labels.reduce((max, label) => Math.max(max, label.length), 0);
-                const dynamicPadding = Math.max(60, (longestLabelLength * 5) + 10); 
+                
+                // Karakter başına 7 piksel (güvenlik payı yüksek) + 20 piksel buffer.
+                const requiredWidth = Math.max(80, (longestLabelLength * 7) + 20); 
+                // **********************************************
 
                 if (topicChartInstance) topicChartInstance.destroy();
                 topicChartInstance = new Chart(ctxTopic, {
@@ -237,14 +229,35 @@
                         plugins: { 
                             legend: { display: false } 
                         },
-                        layout: {
-                            padding: {
-                                left: dynamicPadding // Güvenli dinamik değer kullanılıyor.
-                            }
-                        }, 
                         scales: { 
-                            x: { min: 0, max: 100 } 
-                        } 
+                            x: { min: 0, max: 100 },
+                            y: {
+                                // Ticks (etiketler) için özel ayar:
+                                ticks: {
+                                    // Etiket yazı tipini manuel olarak tanımlıyoruz (Tailwind'in varsayılanı)
+                                    font: {
+                                        size: 11 // Küçük font boyutu tahmini
+                                    }
+                                }
+                            }
+                        },
+                        // ✅ KESİN ÇÖZÜM: Genişlik Ayarı için 'afterFit' Hook'u
+                        layout: {
+                            padding: 0
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        
+                        // En dış opsiyon bloğunun altına özel eklenti
+                        afterLayout: function(chart) {
+                            const yAxis = chart.scales.y;
+                            // Hesaplanan genişliği zorla uygula
+                            yAxis.paddingLeft = requiredWidth; 
+                            yAxis.width = requiredWidth; 
+                            yAxis.min = requiredWidth; // Bu, Chart.js'in genişliği doğru tanımasını sağlar.
+                        }
+                        
                     }
                 });
 
@@ -259,7 +272,6 @@
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
                 });
             };
-
             return {
                 showSection: function(id) {
                     ['setup', 'entry', 'analysis'].forEach(i => {
@@ -375,3 +387,6 @@
     </script>
 </body>
 </html>
+
+
+
