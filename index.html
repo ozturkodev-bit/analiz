@@ -56,28 +56,40 @@
     <script>
         
 
-        // Tuş Kombinasyonlarını Engelleme
-        document.onkeydown = function(e) {
-            // F12
-            if(e.keyCode == 123) { return false; }
-            // Ctrl+I (DevTools)
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; }
-            // Ctrl+J (DevTools)
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; }
-            // Ctrl+C (DevTools)
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; }
-            // Ctrl+U (Kaynak Görüntüle)
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; }
-        }
+       <script>
+// Gelişmiş ama GA uyumlu DevTools engelleme sistemi
 
-        // Basit Debugger Engelleyici (DevTools açılırsa sistemi yavaşlatır/durdurur)
-        // NOT: Kodu kendiniz düzenlerken bu satırı yorum satırı yapın, yoksa sizi de durdurur!
-        /*
-        setInterval(function(){
-            debugger;
-        }, 1000);
-        */
-    </script>
+document.addEventListener("keydown", function (e) {
+
+    // F12
+    if (e.key === "F12") {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl + Shift + I
+    if (e.ctrlKey && e.shiftKey && e.key === "I") {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl + Shift + J
+    if (e.ctrlKey && e.shiftKey && e.key === "J") {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl + U (Kaynak görüntüle)
+    if (e.ctrlKey && e.key === "U") {
+        e.preventDefault();
+        return false;
+    }
+});
+
+// ❗ ÖNEMLİ: Eski kod Analytics'i kilitliyordu.
+// "debugger" döngüsü tamamen kaldırıldı.
+</script>
+
 </head>
 <body class="p-4 md:p-8 min-h-screen">
 
@@ -365,6 +377,7 @@
     </script>
 </body>
 </html>
+
 
 
 
