@@ -3,26 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Sınav Analiz Asistanı</title>
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP8GHTPZRD"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+    
+      gtag('config', 'G-DP8GHTPZRD');
+    </script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap');
         
-        /* KORUMA KATMANI CSS */
+        /* KORUMA KATMANI CSS (Metin seçimi engeli) KALDIRILDI */
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc; 
             color: #334155;
-            -webkit-user-select: none; /* Chrome/Safari seçimi engelle */
-            -moz-user-select: none; /* Firefox seçimi engelle */
-            -ms-user-select: none; /* IE/Edge seçimi engelle */
-            user-select: none; /* Genel seçim engelleme */
+            /* user-select: none kaldırıldı */
         }
-        
-        /* Girdi alanlarında seçime izin ver (yoksa yazı yazamazsınız) */
-        input, textarea { -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; }
 
         .step-active { border-bottom: 3px solid #2563eb; color: #1e40af; font-weight: 700; }
         .step-inactive { color: #94a3b8; border-bottom: 3px solid transparent; }
@@ -44,30 +48,9 @@
     </style>
     
     <script>
-        
-
-        // Tuş Kombinasyonlarını Engelleme
-        document.onkeydown = function(e) {
-            // F12
-            if(e.keyCode == 123) { return false; }
-            // Ctrl+I (DevTools)
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; }
-            // Ctrl+J (DevTools)
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; }
-            // Ctrl+C (DevTools)
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; }
-            // Ctrl+U (Kaynak Görüntüle)
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; }
-        }
-
-        // Basit Debugger Engelleyici (DevTools açılırsa sistemi yavaşlatır/durdurur)
-        // NOT: Kodu kendiniz düzenlerken bu satırı yorum satırı yapın, yoksa sizi de durdurur!
-        /*
-        setInterval(function(){
-            debugger;
-        }, 1000);
-        */
+        /* F12, Ctrl+Shift+I gibi geliştirici araçlarını engelleyen kodlar kaldırıldı. */
     </script>
+
 </head>
 <body class="p-4 md:p-8 min-h-screen">
 
@@ -76,8 +59,6 @@
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fas fa-chart-line text-blue-600 mr-2"></i> Sınav Analiz Asistanı</h1>
                 <p class="text-slate-500 mt-1 text-sm">Veri girişi yapın, otomatik resmi raporunuzu alın.</p>
-                
-                
             </div>
             <div class="mt-4 md:mt-0 flex space-x-2">
                 <button onclick="SystemCore.showSection('setup')" id="nav-setup" class="px-4 py-2 step-active transition-all">1. Kurulum</button>
@@ -346,13 +327,20 @@
 
                     setTimeout(() => drawCharts(topicStats, scores), 100);
                 },
-               
+                
                 clearAllData: function() { if(confirm("Tüm veriler silinecek?")) { localStorage.removeItem(SK_STUDENTS); localStorage.removeItem(SK_QUESTIONS); location.reload(); } },
-                init: function() { loadFromStorage(); if(questions.length===0) this.addQuestionInput(); renderQuestions(); }
+                
+                // ✅ Ziyaretçi sayacı (updateVisitCount) tamamen kaldırıldı.
+                init: function() { 
+                    loadFromStorage(); 
+                    if(questions.length===0) this.addQuestionInput(); 
+                    renderQuestions(); 
+                }
             };
         })();
-        window.onload = SystemCore.init;
+        
+        // ✅ HATA DÜZELTİLDİ: window.onload içindeki 'this' bağlamı sorunu giderildi (TypeError önlendi).
+        window.onload = SystemCore.init.bind(SystemCore);
     </script>
 </body>
 </html>
-
