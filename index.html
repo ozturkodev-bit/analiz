@@ -205,21 +205,18 @@
                 calculateTotalPoints();
             };
 
-          const drawCharts = (topicData, scores) => {
+         const drawCharts = (topicData, scores) => {
                 const ctxTopic = document.getElementById('topicChart').getContext('2d');
                 const labels = Object.keys(topicData);
                 const data = labels.map(t => topicData[t].possible === 0 ? 0 : ((topicData[t].earned / topicData[t].possible) * 100).toFixed(1));
 
                 // **********************************************
-                // ✅ DİNAMİK BOŞLUK HESAPLAMA BAŞLANGICI
-                // 1. En uzun etiket karakter sayısını bulur.
+                // ✅ GÜNCELLENMİŞ DİNAMİK BOŞLUK HESAPLAMA
                 const longestLabelLength = labels.reduce((max, label) => Math.max(max, label.length), 0);
                 
-                // 2. Etiket uzunluğuna göre piksel cinsinden boşluğu hesaplar.
-                // (Karakter başına 7 piksel + 20 piksel güvenlik payı)
-                // Ayrıca boşluğun en az 80 piksel olmasını garanti eder.
-                const dynamicPadding = Math.max(80, (longestLabelLength * 7) + 20); 
-                // ✅ DİNAMİK BOŞLUK HESAPLAMA BİTİŞİ
+                // Formül güncellendi: Karakter başına 5 piksel (daha tutucu) + 10 piksel sabit boşluk.
+                // Minimum boşluk 60 piksel olarak ayarlandı.
+                const dynamicPadding = Math.max(60, (longestLabelLength * 5) + 10); 
                 // **********************************************
 
                 if (topicChartInstance) topicChartInstance.destroy();
@@ -233,10 +230,9 @@
                         plugins: { 
                             legend: { display: false } 
                         },
-                        // Artık sabit bir değer yerine dinamik hesaplanan değeri kullanıyoruz.
                         layout: {
                             padding: {
-                                left: dynamicPadding 
+                                left: dynamicPadding // Yeni, güvenli değer burada kullanılıyor.
                             }
                         }, 
                         scales: { 
@@ -372,4 +368,5 @@
     </script>
 </body>
 </html>
+
 
