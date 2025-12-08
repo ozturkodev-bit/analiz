@@ -205,17 +205,16 @@
                 calculateTotalPoints();
             };
 
-        const drawCharts = (topicData, scores) => {
+       const drawCharts = (topicData, scores) => {
                 const ctxTopic = document.getElementById('topicChart').getContext('2d');
                 const labels = Object.keys(topicData);
                 const data = labels.map(t => topicData[t].possible === 0 ? 0 : ((topicData[t].earned / topicData[t].possible) * 100).toFixed(1));
 
                 // **********************************************
-                // ✅ YENİ YÖNTEM: Y-EKSENİ GENİŞLİĞİNİ ZORLAMA
+                // DİNAMİK HESAPLAMA
                 const longestLabelLength = labels.reduce((max, label) => Math.max(max, label.length), 0);
                 
-                // Karakter başına 7 piksel + 20 piksel buffer kullanarak gerekli genişliği hesaplar.
-                // Bu değer, callback içinde kullanılacak.
+                // Karakter başına 7 piksel (güvenlik payı yüksek) + 20 piksel buffer.
                 const requiredWidth = Math.max(80, (longestLabelLength * 7) + 20); 
                 // **********************************************
 
@@ -230,19 +229,35 @@
                         plugins: { 
                             legend: { display: false } 
                         },
-                        // Artık layout.padding yerine scales.y kullanıyoruz.
                         scales: { 
                             x: { min: 0, max: 100 },
                             y: {
-                                // Bu callback, Chart.js'e y ekseninin min. genişliğini bildirir.
-                                afterBuildTicks: function(chart) {
-                                    // chart.width = hesapladığımız dinamik genişlik
-                                    chart.width = requiredWidth;
-                                    // Gerekirse Chart.js'in varsayılan genişliğini de ayarlayabiliriz.
-                                    chart.min = requiredWidth; 
+                                // Ticks (etiketler) için özel ayar:
+                                ticks: {
+                                    // Etiket yazı tipini manuel olarak tanımlıyoruz (Tailwind'in varsayılanı)
+                                    font: {
+                                        size: 11 // Küçük font boyutu tahmini
+                                    }
                                 }
                             }
-                        } 
+                        },
+                        // ✅ KESİN ÇÖZÜM: Genişlik Ayarı için 'afterFit' Hook'u
+                        layout: {
+                            padding: 0
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        
+                        // En dış opsiyon bloğunun altına özel eklenti
+                        afterLayout: function(chart) {
+                            const yAxis = chart.scales.y;
+                            // Hesaplanan genişliği zorla uygula
+                            yAxis.paddingLeft = requiredWidth; 
+                            yAxis.width = requiredWidth; 
+                            yAxis.min = requiredWidth; // Bu, Chart.js'in genişliği doğru tanımasını sağlar.
+                        }
+                        
                     }
                 });
 
@@ -257,7 +272,6 @@
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
                 });
             };
-
             return {
                 showSection: function(id) {
                     ['setup', 'entry', 'analysis'].forEach(i => {
@@ -373,6 +387,7 @@
     </script>
 </body>
 </html>
+
 
 
 
