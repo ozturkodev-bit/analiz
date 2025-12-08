@@ -219,12 +219,12 @@
                 const data = labels.map(t => topicData[t].possible === 0 ? 0 : ((topicData[t].earned / topicData[t].possible) * 100).toFixed(1));
 
                 // **********************************************
-                // ✅ GÜVENLİ DİNAMİK BOŞLUK HESAPLAMA
+                // ✅ EN AGRESİF DİNAMİK GENİŞLİK HESAPLAMA
                 const longestLabelLength = labels.reduce((max, label) => Math.max(max, label.length), 0);
                 
-                // Minimum boşluğu 150 piksel (yazıların kaybolmasını engeller) olarak ayarlarız.
-                // Karakter başına çarpanı 6'ya düşürdük.
-                const dynamicPadding = Math.max(150, (longestLabelLength * 6) + 30); 
+                // Karakter başına 7 piksel (güvenlik payı) + 30 piksel buffer.
+                // Minimum 150 piksel olmasını garanti eder.
+                const requiredWidth = Math.max(150, (longestLabelLength * 7) + 30); 
                 // **********************************************
 
                 if (topicChartInstance) topicChartInstance.destroy();
@@ -238,15 +238,32 @@
                         plugins: { 
                             legend: { display: false } 
                         },
-                        // Güvenli dinamik boşluğu layout padding olarak uyguluyoruz.
+                        // Artık layout.padding kullanmıyoruz.
                         layout: {
-                            padding: {
-                                left: dynamicPadding 
-                            }
-                        }, 
+                            padding: 0 // Padding'i sıfırlıyoruz.
+                        },
                         scales: { 
-                            x: { min: 0, max: 100 } 
-                        } 
+                            x: { min: 0, max: 100 },
+                            y: {
+                                ticks: {
+                                    // Font ayarı, Chart.js'in genişliği doğru hesaplamasına yardımcı olur.
+                                    font: { size: 11 } 
+                                },
+                                // Y ekseninin otomatik boşluk ayarlarını devre dışı bırakıyoruz.
+                                beginAtZero: false 
+                            }
+                        },
+                        // ✅ KESİN ÇÖZÜM: 'afterLayout' Hook'u ile Y Ekseninin Genişliğini Zorla Ayarlama
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        afterLayout: function(chart) {
+                            const yAxis = chart.scales.y;
+                            // Hesaplanan gerekli genişliği doğrudan y eksenine zorla uygula
+                            yAxis.width = requiredWidth; 
+                            // Gerekli tüm metrikleri güncelleyerek Chart.js'i uyar.
+                            yAxis.paddingLeft = requiredWidth; 
+                        }
                     }
                 });
 
@@ -376,6 +393,7 @@
     </script>
 </body>
 </html>
+
 
 
 
