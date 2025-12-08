@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sınav Analiz Asistanı</title>
     
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP8GHTPZRD"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-    
       gtag('config', 'G-DP8GHTPZRD');
     </script>
     
-    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"> 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:700&display=swap');
         
-        /* KORUMA KATMANI CSS (Metin seçimi engeli) KALDIRILDI */
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc; 
@@ -111,7 +111,10 @@
     <div id="section-analysis" class="max-w-6xl mx-auto space-y-6 hidden">
         <div class="flex flex-col md:flex-row gap-4 no-print">
             <button onclick="SystemCore.generateAnalysis()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-6 py-4 rounded-xl shadow-md font-bold text-lg transition-all"><i class="fas fa-sync-alt mr-2"></i> Analizi Yenile</button>
-            <button onclick="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white px-6 py-4 rounded-xl shadow-md font-bold text-lg transition-all"><i class="fas fa-print mr-2"></i> Resmi Rapor Yazdır (PDF)</button>
+            
+            <button onclick="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white px-6 py-4 rounded-xl shadow-md font-bold text-lg transition-all" style="background-color: #1e293b !important; color: white !important;">
+                <i class="fas fa-print mr-2"></i> Resmi Rapor Yazdır (PDF)
+            </button>
         </div>
 
         <div id="printableReport" class="bg-white p-8 md:p-12 rounded-none md:rounded-xl shadow-none md:shadow-lg max-w-[210mm] mx-auto min-h-[297mm]">
@@ -333,7 +336,6 @@
             };
         })();
         
-        // HATA DÜZELTİLDİ: window.onload içindeki 'this' bağlamı sorunu giderildi (TypeError önlendi).
         window.onload = SystemCore.init.bind(SystemCore);
     </script>
 </body>
