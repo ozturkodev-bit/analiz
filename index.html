@@ -2,6 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sınav Analiz Asistanı</title>
     
@@ -153,7 +154,10 @@
             </div>
         </div>
     </div>
-
+    
+    <div class="max-w-6xl mx-auto mt-10 p-4 text-center text-xs text-gray-500 no-print">
+        &copy; 2024. Tüm Hakları Saklıdır. Bu araç **[Geliştirici Adı / Okul Adı]** tarafından geliştirilmiştir.
+    </div>
     <script>
         const SystemCore = (function() {
             let students = [], questions = [], topicChartInstance = null, distChartInstance = null;
@@ -201,7 +205,7 @@
                 calculateTotalPoints();
             };
 
-          const drawCharts = (topicData, scores) => {
+            const drawCharts = (topicData, scores) => {
                 const ctxTopic = document.getElementById('topicChart').getContext('2d');
                 const labels = Object.keys(topicData);
                 const data = labels.map(t => topicData[t].possible === 0 ? 0 : ((topicData[t].earned / topicData[t].possible) * 100).toFixed(1));
@@ -217,7 +221,7 @@
                         plugins: { 
                             legend: { display: false } 
                         },
-                        // ✅ BU BLOK EKLENDİ/GÜNCELLENDİ: Etiketler için soldan 80px boşluk ayırır
+                        // Konu başlıkları için boşluk (padding) eklendi
                         layout: {
                             padding: {
                                 left: 80 
@@ -240,6 +244,7 @@
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
                 });
             };
+
             return {
                 showSection: function(id) {
                     ['setup', 'entry', 'analysis'].forEach(i => {
@@ -355,4 +360,3 @@
     </script>
 </body>
 </html>
-
