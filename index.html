@@ -2,72 +2,77 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sınav Analiz Asistanı</title>
-    
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    
+
+    <!-- Google Analytics (kept as-is) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP8GHTPZRD"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-DP8GHTPZRD');
+      function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-DP8GHTPZRD');
     </script>
-    
-    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"> 
+
+    <!-- Tailwind (CDN) + Chart.js + Font Awesome -->
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:700&display=swap');
-        
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc; 
-            color: #334155;
+        /* Custom small responsive tweaks that complement Tailwind */
+        :root{--card-bg:#ffffff;--muted:#94a3b8}
+        body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background:#f8fafc; color:#334155}
+
+        /* Make long table headers/td wrap nicely on small screens */
+        table th, table td{word-break:break-word; white-space:normal}
+
+        /* Sticky columns for small screens need explicit z-index/backdrop */
+        .sticky-left{position:sticky; left:0; z-index:30; background:var(--card-bg)}
+        .sticky-right{position:sticky; right:0; z-index:30; background:var(--card-bg)}
+
+        /* Improve print layout */
+        @media print{
+            @page{size:A4; margin:10mm}
+            body *{visibility:hidden}
+            #printableReport, #printableReport *{visibility:visible}
+            #printableReport{position:absolute; left:0; top:0; width:100%; margin:0; padding:0; background:white; color:black}
+            .no-print{display:none !important}
+            .print-break-inside{break-inside:avoid}
+            canvas{max-height:300px !important}
         }
 
-        .step-active { border-bottom: 3px solid #2563eb; color: #1e40af; font-weight: 700; }
-        .step-inactive { color: #94a3b8; border-bottom: 3px solid transparent; }
-        .step-inactive:hover { color: #64748b; border-bottom: 3px solid #cbd5e1; }
-        
-        /* Yazdırma Ayarları */
-        @media print {
-            @page { size: A4; margin: 10mm; }
-            body * { visibility: hidden; }
-            #printableReport, #printableReport * { visibility: visible; }
-            #printableReport { 
-                position: absolute; left: 0; top: 0; width: 100%; 
-                margin: 0; padding: 0; background: white; color: black;
-            }
-            .no-print { display: none !important; }
-            .print-break-inside { break-inside: avoid; }
-            canvas { max-height: 300px !important; }
-        }
+        /* Small improvements for inputs on mobile */
+        input[type='number'], input[type='text'], textarea{font-size:14px}
+
+        /* Ensure the report area is limited to A4 width on large screens */
+        .report-container{max-width:210mm}
+
+        /* Responsive chart container heights */
+        @media (min-width: 768px){ .chart-h-40{height:160px} .chart-h-32{height:128px} }
+        @media (max-width: 767px){ .chart-h-40{height:160px} .chart-h-32{height:120px} }
     </style>
-    
 </head>
 <body class="p-4 md:p-8 min-h-screen">
 
-    <div class="max-w-6xl mx-auto mb-8 no-print">
-        <div class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fas fa-chart-line text-blue-600 mr-2"></i> Sınav Analiz Asistanı</h1>
+    <div class="max-w-6xl mx-auto mb-6 no-print">
+        <div class="flex flex-col md:flex-row justify-between items-center bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="w-full md:w-auto text-center md:text-left">
+                <h1 class="text-xl md:text-3xl font-bold text-slate-800"><i class="fas fa-chart-line text-blue-600 mr-2"></i> Sınav Analiz Asistanı</h1>
                 <p class="text-slate-500 mt-1 text-sm">Veri girişi yapın, otomatik resmi raporunuzu alın.</p>
             </div>
-            <div class="mt-4 md:mt-0 flex space-x-2">
-                <button onclick="SystemCore.showSection('setup')" id="nav-setup" class="px-4 py-2 step-active transition-all">1. Kurulum</button>
-                <button onclick="SystemCore.showSection('entry')" id="nav-entry" class="px-4 py-2 step-inactive transition-all">2. Not Girişi</button>
-                <button onclick="SystemCore.showSection('analysis')" id="nav-analysis" class="px-4 py-2 step-inactive transition-all">3. Raporlama</button>
+            <div class="mt-3 md:mt-0 flex flex-wrap justify-center md:justify-end gap-2">
+                <button onclick="SystemCore.showSection('setup')" id="nav-setup" class="px-3 py-2 step-active transition-all text-sm md:text-base">1. Kurulum</button>
+                <button onclick="SystemCore.showSection('entry')" id="nav-entry" class="px-3 py-2 step-inactive transition-all text-sm md:text-base">2. Not Girişi</button>
+                <button onclick="SystemCore.showSection('analysis')" id="nav-analysis" class="px-3 py-2 step-inactive transition-all text-sm md:text-base">3. Raporlama</button>
             </div>
         </div>
     </div>
 
+    <!-- SETUP -->
     <div id="section-setup" class="max-w-6xl mx-auto space-y-6 animate-fade-in">
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h2 class="text-lg font-bold text-slate-700 mb-4 flex items-center"><i class="fas fa-school text-blue-500 mr-2"></i> Rapor Bilgileri</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100">
+            <h2 class="text-base md:text-lg font-bold text-slate-700 mb-4 flex items-center"><i class="fas fa-school text-blue-500 mr-2"></i> Rapor Bilgileri</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div><label class="block text-xs font-bold text-gray-500 mb-1">Okul Adı</label><input type="text" id="infoSchool" class="w-full border rounded p-2 text-sm" placeholder="Örn: Atatürk Anadolu Lisesi"></div>
                 <div><label class="block text-xs font-bold text-gray-500 mb-1">Öğretmen Adı Soyadı</label><input type="text" id="infoTeacher" class="w-full border rounded p-2 text-sm" placeholder="Örn: Mehmet Öztürk"></div>
                 <div><label class="block text-xs font-bold text-gray-500 mb-1">Ders Adı & Sınıf</label><input type="text" id="infoLesson" class="w-full border rounded p-2 text-sm" placeholder="Örn: Biyoloji - 10/A"></div>
@@ -75,89 +80,107 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-fit">
-                <h2 class="text-lg font-bold text-slate-700 mb-2">A. Sınıf Listesi</h2>
-                <textarea id="studentPasteArea" class="w-full h-40 p-3 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 text-sm" placeholder="101 Ahmet Yılmaz&#10;102 Ayşe Demir..."></textarea>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="lg:col-span-1 bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 h-fit">
+                <h2 class="text-base md:text-lg font-bold text-slate-700 mb-2">A. Sınıf Listesi</h2>
+                <textarea id="studentPasteArea" class="w-full h-36 p-3 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 text-sm" placeholder="101 Ahmet Yılmaz\n102 Ayşe Demir..."></textarea>
                 <div class="mt-3 flex justify-between items-center">
                     <button onclick="SystemCore.parseStudents()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"><i class="fas fa-check"></i> Listeyi Kaydet</button>
                     <span id="studentCountBadge" class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded hidden"></span>
                 </div>
             </div>
-            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h2 class="text-lg font-bold text-slate-700 mb-2">B. Kazanım ve Puanlama</h2>
-                <div id="questionsContainer" class="space-y-2 max-h-[300px] overflow-y-auto pr-2"></div>
-                <div class="flex justify-between items-center mt-6 pt-4 border-t">
+
+            <div class="lg:col-span-2 bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="text-base md:text-lg font-bold text-slate-700 mb-2">B. Kazanım ve Puanlama</h2>
+                <div id="questionsContainer" class="space-y-2 max-h-72 overflow-y-auto pr-2"></div>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 pt-4 border-t">
                     <button onclick="SystemCore.addQuestionInput()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium"><i class="fas fa-plus"></i> Soru Ekle</button>
-                    <div class="font-bold text-gray-700">Toplam: <span id="totalPointsDisplay" class="text-2xl text-blue-600">0</span> Puan</div>
+                    <div class="font-bold text-gray-700 mt-3 sm:mt-0">Toplam: <span id="totalPointsDisplay" class="text-2xl text-blue-600">0</span> Puan</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="section-entry" class="max-w-6xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-100 hidden">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-slate-800">Not Giriş Ekranı</h2>
-            <button onclick="SystemCore.clearAllData()" class="text-red-500 text-xs hover:bg-red-50 border border-red-200 px-3 py-1.5 rounded transition">Sıfırla</button>
+    <!-- ENTRY -->
+    <div id="section-entry" class="max-w-6xl mx-auto bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 hidden">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+            <h2 class="text-lg font-bold text-slate-800">Not Giriş Ekranı</h2>
+            <div class="flex items-center gap-3">
+                <button onclick="SystemCore.clearAllData()" class="text-red-500 text-xs hover:bg-red-50 border border-red-200 px-3 py-1.5 rounded transition">Sıfırla</button>
+                <div class="text-sm text-gray-500">(Tabloda genişlik sorun olursa yatay kaydırın)</div>
+            </div>
         </div>
-        <div class="overflow-x-auto border rounded-lg shadow-inner max-h-[600px] relative">
-            <table class="min-w-full text-sm text-center text-gray-700 divide-y divide-gray-200">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 z-30 shadow-sm"><tr id="tableHeaderRow"></tr></thead>
+
+        <div class="overflow-x-auto border rounded-lg shadow-inner max-h-[60vh] relative">
+            <table class="min-w-full text-sm text-left text-gray-700 divide-y divide-gray-200">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 z-30"><tr id="tableHeaderRow"></tr></thead>
                 <tbody id="gradingTableBody" class="bg-white divide-y divide-gray-100"></tbody>
             </table>
         </div>
-        <div class="mt-6"><button onclick="SystemCore.saveAllScores()" class="w-full bg-blue-600 text-white py-3 rounded-xl text-lg font-bold hover:bg-blue-700 shadow-lg transition-all"><i class="fas fa-save mr-2"></i> KAYDET VE ANALİZE GEÇ</button></div>
+
+        <div class="mt-4"><button onclick="SystemCore.saveAllScores()" class="w-full md:w-auto bg-blue-600 text-white py-3 px-6 rounded-xl text-lg font-bold hover:bg-blue-700 shadow-lg transition-all"><i class="fas fa-save mr-2"></i> KAYDET VE ANALİZE GEÇ</button></div>
     </div>
 
+    <!-- ANALYSIS -->
     <div id="section-analysis" class="max-w-6xl mx-auto space-y-6 hidden">
         <div class="flex flex-col md:flex-row gap-4 no-print">
-            <button onclick="SystemCore.generateAnalysis()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-6 py-4 rounded-xl shadow-md font-bold text-lg transition-all"><i class="fas fa-sync-alt mr-2"></i> Analizi Yenile</button>
-            
-            <button onclick="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white px-6 py-4 rounded-xl shadow-md font-bold text-lg transition-all" style="background-color: #1e293b !important; color: white !important;">
-                <i class="fas fa-print mr-2"></i> Resmi Rapor Yazdır (PDF)
-            </button>
+            <button onclick="SystemCore.generateAnalysis()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl shadow-md font-bold text-base transition-all"><i class="fas fa-sync-alt mr-2"></i> Analizi Yenile</button>
+            <button onclick="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-xl shadow-md font-bold text-base transition-all"><i class="fas fa-print mr-2"></i> Resmi Rapor Yazdır (PDF)</button>
         </div>
 
-        <div id="printableReport" class="bg-white p-8 md:p-12 rounded-none md:rounded-xl shadow-none md:shadow-lg max-w-[210mm] mx-auto min-h-[297mm]">
+        <div id="printableReport" class="bg-white p-6 md:p-12 rounded-none md:rounded-xl shadow-none md:shadow-lg report-container mx-auto min-h-[297mm]">
             <div class="text-center border-b-2 border-black pb-4 mb-6">
-                <h1 class="text-2xl font-bold font-[Playfair Display] uppercase tracking-wide text-black mb-1" id="reportSchoolName">OKUL ADI YOK</h1>
-                <h2 class="text-lg font-semibold text-gray-800 uppercase" id="reportYear"></h2>
-                <h3 class="text-md font-medium text-gray-700 mt-2" id="reportLesson">SINAV ANALİZ RAPORU</h3>
+                <h1 class="text-xl md:text-2xl font-bold font-[Playfair Display] uppercase tracking-wide text-black mb-1" id="reportSchoolName">OKUL ADI YOK</h1>
+                <h2 class="text-sm md:text-lg font-semibold text-gray-800 uppercase" id="reportYear"></h2>
+                <h3 class="text-sm md:text-md font-medium text-gray-700 mt-2" id="reportLesson">SINAV ANALİZ RAPORU</h3>
             </div>
-            <div class="grid grid-cols-5 gap-4 mb-8 text-center print-break-inside">
+
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6 text-center print-break-inside">
                 <div class="border border-gray-300 p-2 rounded bg-gray-50"><div class="text-[10px] text-gray-500 uppercase font-bold">Öğrenci</div><div class="text-xl font-bold text-gray-800" id="statStudents">0</div></div>
                 <div class="border border-gray-300 p-2 rounded bg-gray-50"><div class="text-[10px] text-gray-500 uppercase font-bold">Ortalama</div><div class="text-xl font-bold text-blue-700" id="statAverage">0</div></div>
                 <div class="border border-gray-300 p-2 rounded bg-gray-50"><div class="text-[10px] text-gray-500 uppercase font-bold">En Yüksek</div><div class="text-xl font-bold text-green-700" id="statMax">0</div></div>
                 <div class="border border-gray-300 p-2 rounded bg-gray-50"><div class="text-[10px] text-gray-500 uppercase font-bold">En Düşük</div><div class="text-xl font-bold text-red-700" id="statMin">0</div></div>
                 <div class="border border-gray-300 p-2 rounded bg-gray-50"><div class="text-[10px] text-gray-500 uppercase font-bold">Başarı %</div><div class="text-xl font-bold text-black" id="statPassRate">%0</div></div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 print-break-inside">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 print-break-inside">
                 <div>
                     <h4 class="font-bold text-sm uppercase border-b border-gray-400 mb-2 pb-1">1. Konu/Kazanım Analizi</h4>
-                    <table class="w-full text-xs text-left text-gray-600 border border-gray-300">
-                        <thead class="bg-gray-100 text-gray-800 uppercase"><tr><th class="px-2 py-1 border">Konu</th><th class="px-2 py-1 border text-center">Başarı</th><th class="px-2 py-1 border text-center">Durum</th></tr></thead>
-                        <tbody id="questionAnalysisBody"></tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-left text-gray-600 border border-gray-300">
+                            <thead class="bg-gray-100 text-gray-800 uppercase"><tr><th class="px-2 py-1 border">Konu</th><th class="px-2 py-1 border text-center">Başarı</th><th class="px-2 py-1 border text-center">Durum</th></tr></thead>
+                            <tbody id="questionAnalysisBody"></tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="flex flex-col gap-4">
-                    <div><h4 class="font-bold text-sm uppercase border-b border-gray-400 mb-2 pb-1">2. Konu Başarı Grafiği</h4><div class="h-40 flex justify-center"><canvas id="topicChart"></canvas></div></div>
-                    <div><h4 class="font-bold text-sm uppercase border-b border-gray-400 mb-2 pb-1">3. Not Dağılım Grafiği</h4><div class="h-32 flex justify-center"><canvas id="distributionChart"></canvas></div></div>
+                    <div>
+                        <h4 class="font-bold text-sm uppercase border-b border-gray-400 mb-2 pb-1">2. Konu Başarı Grafiği</h4>
+                        <div class="chart-h-40 flex justify-center"><canvas id="topicChart" aria-label="Konu grafiği" role="img"></canvas></div>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm uppercase border-b border-gray-400 mb-2 pb-1">3. Not Dağılım Grafiği</h4>
+                        <div class="chart-h-32 flex justify-center"><canvas id="distributionChart" aria-label="Not dağılımı" role="img"></canvas></div>
+                    </div>
                 </div>
             </div>
+
             <div id="smartRecommendations" class="mb-6 space-y-2 text-sm text-gray-700 print-break-inside"></div>
+
             <div class="mb-8 print-break-inside">
                 <h4 class="font-bold text-sm uppercase border-b border-gray-400 mb-2 pb-1">4. Genel Değerlendirme ve Sonuç</h4>
                 <div id="teacherReportOutput" class="text-sm text-justify leading-relaxed whitespace-pre-wrap font-serif text-gray-800">Analiz bekleniyor...</div>
             </div>
-            <div class="mt-16 flex justify-end print-break-inside">
-                <div class="text-center w-48"><p class="font-bold text-gray-800 mb-12" id="signatureName">Öğretmen Adı</p><div class="border-t border-black w-full pt-1 text-xs">Ders Öğretmeni</div></div>
+
+            <div class="mt-8 flex justify-end print-break-inside">
+                <div class="text-center w-44"><p class="font-bold text-gray-800 mb-8" id="signatureName">Öğretmen Adı</p><div class="border-t border-black w-full pt-1 text-xs">Ders Öğretmeni</div></div>
             </div>
         </div>
     </div>
-    
-    <div class="max-w-6xl mx-auto mt-10 p-4 text-center text-xs text-gray-500 no-print">
-        &copy; 2024. Tüm Hakları Saklıdır. Bu araç **[Geliştirici Adı / Okul Adı]** tarafından geliştirilmiştir.
-    </div>
+
+    <div class="max-w-6xl mx-auto mt-6 p-4 text-center text-xs text-gray-500 no-print">&copy; 2024. Tüm Hakları Saklıdır. Bu araç <strong>[Geliştirici Adı / Okul Adı]</strong> tarafından geliştirilmiştir.</div>
+
+    <!-- Improved script logic (responsiveness & accessibility kept) -->
     <script>
         const SystemCore = (function() {
             let students = [], questions = [], topicChartInstance = null, distChartInstance = null;
@@ -205,188 +228,84 @@
                 calculateTotalPoints();
             };
 
-       const drawCharts = (topicData, scores) => {
+            const drawCharts = (topicData, scores) => {
                 const ctxTopic = document.getElementById('topicChart').getContext('2d');
                 const labels = Object.keys(topicData);
                 const data = labels.map(t => topicData[t].possible === 0 ? 0 : ((topicData[t].earned / topicData[t].possible) * 100).toFixed(1));
 
-                // **********************************************
-                // DİNAMİK HESAPLAMA
-                const longestLabelLength = labels.reduce((max, label) => Math.max(max, label.length), 0);
-                
-                // Karakter başına 7 piksel (güvenlik payı yüksek) + 20 piksel buffer.
-                const requiredWidth = Math.max(80, (longestLabelLength * 7) + 20); 
-                // **********************************************
-
                 if (topicChartInstance) topicChartInstance.destroy();
                 topicChartInstance = new Chart(ctxTopic, {
                     type: 'bar',
-                    data: { labels: labels, datasets: [{ label: 'Başarı %', data: data, backgroundColor: 'rgba(59, 130, 246, 0.7)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1, barPercentage: 0.6 }] },
-                    options: { 
-                        indexAxis: 'y', 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
-                        plugins: { 
-                            legend: { display: false } 
-                        },
-                        scales: { 
-                            x: { min: 0, max: 100 },
-                            y: {
-                                // Ticks (etiketler) için özel ayar:
-                                ticks: {
-                                    // Etiket yazı tipini manuel olarak tanımlıyoruz (Tailwind'in varsayılanı)
-                                    font: {
-                                        size: 11 // Küçük font boyutu tahmini
-                                    }
-                                }
-                            }
-                        },
-                        // ✅ KESİN ÇÖZÜM: Genişlik Ayarı için 'afterFit' Hook'u
-                        layout: {
-                            padding: 0
-                        },
-                        plugins: {
-                            legend: { display: false }
-                        },
-                        
-                        // En dış opsiyon bloğunun altına özel eklenti
-                        afterLayout: function(chart) {
-                            const yAxis = chart.scales.y;
-                            // Hesaplanan genişliği zorla uygula
-                            yAxis.paddingLeft = requiredWidth; 
-                            yAxis.width = requiredWidth; 
-                            yAxis.min = requiredWidth; // Bu, Chart.js'in genişliği doğru tanımasını sağlar.
-                        }
-                        
+                    data: { labels: labels, datasets: [{ label: 'Başarı %', data: data }] },
+                    options: {
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { x: { min: 0, max: 100 }, y: { ticks: { font: { size: 11 } } } }
                     }
                 });
 
                 const ctxDist = document.getElementById('distributionChart').getContext('2d');
-                const dist = [0, 0, 0, 0];
+                const dist = [0,0,0,0];
                 scores.forEach(s => { if (s < 50) dist[0]++; else if (s < 70) dist[1]++; else if (s < 85) dist[2]++; else dist[3]++; });
-
                 if (distChartInstance) distChartInstance.destroy();
-                distChartInstance = new Chart(ctxDist, {
-                    type: 'bar',
-                    data: { labels: ['0-49', '50-69', '70-84', '85-100'], datasets: [{ data: dist, backgroundColor: ['#ef4444', '#eab308', '#3b82f6', '#22c55e'], borderWidth: 1 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-                });
+                distChartInstance = new Chart(ctxDist, { type: 'bar', data: { labels: ['0-49','50-69','70-84','85-100'], datasets: [{ data: dist }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 } } } } });
             };
+
             return {
                 showSection: function(id) {
-                    ['setup', 'entry', 'analysis'].forEach(i => {
-                        document.getElementById('section-'+i).classList.add('hidden');
-                        document.getElementById('nav-'+i).classList.remove('step-active');
-                        document.getElementById('nav-'+i).classList.add('step-inactive');
-                    });
-                    document.getElementById('section-'+id).classList.remove('hidden');
-                    document.getElementById('nav-'+id).classList.add('step-active');
-                    document.getElementById('nav-'+id).classList.remove('step-inactive');
+                    ['setup','entry','analysis'].forEach(i=>{ document.getElementById('section-'+i).classList.add('hidden'); document.getElementById('nav-'+i).classList.remove('step-active'); document.getElementById('nav-'+i).classList.add('step-inactive'); });
+                    document.getElementById('section-'+id).classList.remove('hidden'); document.getElementById('nav-'+id).classList.add('step-active'); document.getElementById('nav-'+id).classList.remove('step-inactive');
                     if(id==='entry') this.renderQuickEntryTable();
                 },
                 parseStudents: function() {
-                    const raw = document.getElementById('studentPasteArea').value;
-                    let count = 0, temp = [];
-                    raw.split('\n').forEach(line => {
-                        const m = line.trim().match(/^(\d+)\s+(.+)$/);
-                        if (m) {
-                            const exist = students.find(s => s.no == m[1]);
-                            temp.push({ no: m[1], name: m[2], scores: exist ? exist.scores : {}, total: exist ? exist.total : 0, isGraded: exist ? exist.isGraded : false });
-                            count++;
-                        }
-                    });
-                    if (count > 0) { students = temp; saveToStorage(); document.getElementById('studentCountBadge').innerText = count; document.getElementById('studentCountBadge').classList.remove('hidden'); alert("✅ " + count + " öğrenci eklendi."); }
-                    else alert("⚠️ Liste formatı hatalı. 'No Ad Soyad' şeklinde olmalı.");
+                    const raw = document.getElementById('studentPasteArea').value; let count=0, temp=[];
+                    raw.split('\n').forEach(line=>{ const m=line.trim().match(/^(\d+)\s+(.+)$/); if(m){ const exist = students.find(s=>s.no==m[1]); temp.push({ no:m[1], name:m[2], scores: exist?exist.scores:{}, total: exist?exist.total:0, isGraded: exist?exist.isGraded:false }); count++; } });
+                    if(count>0){ students=temp; saveToStorage(); document.getElementById('studentCountBadge').innerText=count; document.getElementById('studentCountBadge').classList.remove('hidden'); alert('✅ '+count+' öğrenci eklendi.'); } else alert("⚠️ Liste formatı hatalı. 'No Ad Soyad' şeklinde olmalı.");
                 },
-                addQuestionInput: function() { questions.push({ id: questions.length + 1, topic: "", points: 10 }); renderQuestions(); saveToStorage(); },
-                removeQuestion: function(i) { if(confirm('Silinsin mi?')) { questions.splice(i, 1); questions.forEach((q, idx) => q.id = idx + 1); renderQuestions(); saveToStorage(); } },
-                updateQuestion: function(i, f, v) { questions[i][f] = v; calculateTotalPoints(); saveToStorage(); },
-                renderQuickEntryTable: function() {
-                    if (students.length === 0 || questions.length === 0) { document.getElementById('gradingTableBody').innerHTML = `<tr><td class="p-4 text-red-500 font-bold bg-red-50">Önce öğrenci ve soru ekleyiniz.</td></tr>`; return; }
-                    const thead = document.getElementById('tableHeaderRow'); thead.innerHTML = `<th class="px-4 py-3 sticky left-0 bg-gray-100 z-20 text-left w-48 border-r">Öğrenci</th>` + questions.map(q => `<th class="px-2 w-16 border-r text-center"><span class="text-xs text-gray-500">S${q.id}</span><br>${q.points}p</th>`).join('') + `<th class="px-4 sticky right-0 bg-gray-200 z-20 border-l">TOP</th>`;
-                    const tbody = document.getElementById('gradingTableBody'); tbody.innerHTML = '';
-                    students.forEach(s => {
-                        let html = `<td class="px-4 py-2 sticky left-0 bg-white z-10 border-r font-medium whitespace-nowrap">${s.no} - ${s.name}</td>`;
-                        questions.forEach(q => { html += `<td class="p-1 border-r"><input type="number" min="0" max="${q.points}" data-q-id="${q.id}" value="${s.scores[q.id]!==undefined?s.scores[q.id]:''}" oninput="SystemCore.autoSaveRow('${s.no}')" class="w-full text-center outline-none font-bold text-gray-700"></td>`; });
-                        html += `<td id="total-${s.no}" class="px-4 py-2 sticky right-0 z-10 font-bold text-center border-l bg-gray-50">${s.total}</td>`;
-                        const tr = document.createElement('tr'); tr.className = 'border-b hover:bg-blue-50'; tr.setAttribute('data-student-no', s.no); tr.innerHTML = html; tbody.appendChild(tr);
+                addQuestionInput: function(){ questions.push({ id: questions.length+1, topic:'', points:10 }); renderQuestions(); saveToStorage(); },
+                removeQuestion: function(i){ if(confirm('Silinsin mi?')){ questions.splice(i,1); questions.forEach((q,idx)=>q.id=idx+1); renderQuestions(); saveToStorage(); } },
+                updateQuestion: function(i,f,v){ questions[i][f]=v; calculateTotalPoints(); saveToStorage(); },
+                renderQuickEntryTable: function(){
+                    if(students.length===0 || questions.length===0){ document.getElementById('gradingTableBody').innerHTML=`<tr><td class="p-4 text-red-500 font-bold bg-red-50">Önce öğrenci ve soru ekleyiniz.</td></tr>`; return; }
+                    const thead = document.getElementById('tableHeaderRow');
+                    thead.innerHTML = `<th class="px-4 py-3 sticky-left bg-gray-100 z-20 text-left w-40 border-r">Öğrenci</th>` + questions.map(q=>`<th class="px-2 w-16 border-r text-center"><span class="text-xs text-gray-500">S${q.id}</span><br>${q.points}p</th>`).join('') + `<th class="px-4 sticky-right bg-gray-200 z-20 border-l">TOP</th>`;
+                    const tbody = document.getElementById('gradingTableBody'); tbody.innerHTML='';
+                    students.forEach(s=>{
+                        let html = `<td class="px-4 py-2 sticky-left bg-white z-10 border-r font-medium whitespace-nowrap">${s.no} - ${s.name}</td>`;
+                        questions.forEach(q=>{ html += `<td class="p-1 border-r"><input type="number" min="0" max="${q.points}" data-q-id="${q.id}" value="${s.scores[q.id]!==undefined?s.scores[q.id]:''}" oninput="SystemCore.autoSaveRow('${s.no}')" class="w-full text-center outline-none font-bold text-gray-700"></td>`; });
+                        html += `<td id="total-${s.no}" class="px-4 py-2 sticky-right z-10 font-bold text-center border-l bg-gray-50">${s.total}</td>`;
+                        const tr = document.createElement('tr'); tr.className='border-b hover:bg-blue-50'; tr.setAttribute('data-student-no', s.no); tr.innerHTML = html; tbody.appendChild(tr);
                     });
                 },
-                autoSaveRow: function(no) {
-                    const s = students.find(item => item.no == no);
-                    if (!s) return;
-                    const row = document.querySelector(`tr[data-student-no="${no}"]`);
-                    let tot = 0;
-                    row.querySelectorAll('input[data-q-id]').forEach(inp => {
-                        let v = parseFloat(inp.value); const max = parseFloat(inp.getAttribute('max'));
-                        if (isNaN(v) || v < 0) v = 0; if (v > max) { inp.value = max; v = max; }
-                        tot += v;
-                    });
-                    s.total = tot; 
-                    const tEl = document.getElementById(`total-${no}`); tEl.innerText = tot; tEl.className = `px-4 py-2 sticky right-0 z-10 font-bold text-center border-l ${tot<50?'bg-red-50 text-red-600':'bg-green-50 text-green-700'}`;
-                },
-                saveAllScores: function() {
-                    let count = 0;
-                    students.forEach(s => {
-                        const row = document.querySelector(`tr[data-student-no="${s.no}"]`);
-                        if (!row) return;
-                        let tot = 0, scores = {}, graded = false;
-                        questions.forEach(q => {
-                            const val = parseFloat(row.querySelector(`input[data-q-id="${q.id}"]`).value);
-                            if (!isNaN(val)) { scores[q.id] = val; tot += val; graded = true; }
-                        });
-                        s.scores = scores; s.total = tot; s.isGraded = graded;
-                        if (graded) count++;
-                    });
-                    saveToStorage(); this.showSection('analysis'); this.generateAnalysis(); alert(`✅ ${count} kayıt güncellendi.`);
-                },
-                generateAnalysis: function() {
-                    saveToStorage();
-                    const graded = students.filter(s => s.isGraded);
-                    if (graded.length === 0) { alert("Not girişi yapınız."); return; }
-                    
-                    document.getElementById('reportSchoolName').innerText = document.getElementById('infoSchool').value || "OKUL ADI";
+                autoSaveRow: function(no){ const s = students.find(item=>item.no==no); if(!s) return; const row = document.querySelector(`tr[data-student-no="${no}"]`); let tot=0; row.querySelectorAll('input[data-q-id]').forEach(inp=>{ let v=parseFloat(inp.value); const max=parseFloat(inp.getAttribute('max')); if(isNaN(v)||v<0) v=0; if(v>max){ inp.value=max; v=max; } tot+=v; }); s.total=tot; const tEl=document.getElementById(`total-${no}`); tEl.innerText=tot; tEl.className = `px-4 py-2 sticky-right z-10 font-bold text-center border-l ${tot<50?'bg-red-50 text-red-600':'bg-green-50 text-green-700'}`; },
+                saveAllScores: function(){ let count=0; students.forEach(s=>{ const row=document.querySelector(`tr[data-student-no="${s.no}"]`); if(!row) return; let tot=0, scores={}, graded=false; questions.forEach(q=>{ const val=parseFloat(row.querySelector(`input[data-q-id="${q.id}"]`).value); if(!isNaN(val)){ scores[q.id]=val; tot+=val; graded=true; } }); s.scores=scores; s.total=tot; s.isGraded=graded; if(graded) count++; }); saveToStorage(); this.showSection('analysis'); this.generateAnalysis(); alert(`✅ ${count} kayıt güncellendi.`); },
+                generateAnalysis: function(){ saveToStorage(); const graded = students.filter(s=>s.isGraded); if(graded.length===0){ alert('Not girişi yapınız.'); return; }
+                    document.getElementById('reportSchoolName').innerText = document.getElementById('infoSchool').value || 'OKUL ADI';
                     document.getElementById('reportYear').innerText = document.getElementById('infoYear').value;
-                    document.getElementById('reportLesson').innerText = (document.getElementById('infoLesson').value || "DERS") + " - SINAV ANALİZ RAPORU";
-                    document.getElementById('signatureName').innerText = document.getElementById('infoTeacher').value || "Öğretmen";
+                    document.getElementById('reportLesson').innerText = (document.getElementById('infoLesson').value || 'DERS') + ' - SINAV ANALİZ RAPORU';
+                    document.getElementById('signatureName').innerText = document.getElementById('infoTeacher').value || 'Öğretmen';
 
-                    const scores = graded.map(s => s.total), avg = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
-                    const low = graded.filter(s => s.total < 50);
-                    
+                    const scores = graded.map(s=>s.total), avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
+                    const low = graded.filter(s=>s.total<50);
                     document.getElementById('statStudents').innerText = graded.length; document.getElementById('statAverage').innerText = avg;
                     document.getElementById('statMax').innerText = Math.max(...scores); document.getElementById('statMin').innerText = Math.min(...scores);
-                    document.getElementById('statPassRate').innerText = '%' + (((graded.length - low.length) / graded.length) * 100).toFixed(0);
+                    document.getElementById('statPassRate').innerText = '%' + (((graded.length - low.length)/graded.length)*100).toFixed(0);
 
                     const topicStats = {};
-                    document.getElementById('questionAnalysisBody').innerHTML = questions.map(q => {
-                        let earned = 0; graded.forEach(s => earned += (s.scores[q.id] || 0));
-                        const max = graded.length * q.points, success = max === 0 ? 0 : (earned / max * 100).toFixed(0);
-                        const t = q.topic || "Konusuz"; if (!topicStats[t]) topicStats[t] = { earned: 0, possible: 0 }; topicStats[t].earned += earned; topicStats[t].possible += max;
-                        return `<tr class="border-b"><td class="px-2 py-1 border-r text-[10px] truncate max-w-[150px]">${q.topic}</td><td class="px-2 py-1 border-r text-center ${success<50?'text-red-600 font-bold':success>=80?'text-green-600':''} ">%${success}</td><td class="px-2 py-1 text-center text-[10px]">${success<50?'Tekrar':success>=80?'İyi':'Gelişmeli'}</td></tr>`;
-                    }).join('');
+                    document.getElementById('questionAnalysisBody').innerHTML = questions.map(q=>{ let earned=0; graded.forEach(s=>earned+=(s.scores[q.id]||0)); const max = graded.length * q.points, success = max===0?0:(earned/max*100).toFixed(0); const t=q.topic||'Konusuz'; if(!topicStats[t]) topicStats[t]={earned:0, possible:0}; topicStats[t].earned+=earned; topicStats[t].possible+=max; return `<tr class="border-b"><td class="px-2 py-1 border-r text-[10px] truncate max-w-[150px]">${q.topic}</td><td class="px-2 py-1 border-r text-center ${success<50?'text-red-600 font-bold':success>=80?'text-green-600':''} ">%${success}</td><td class="px-2 py-1 text-center text-[10px]">${success<50?'Tekrar':success>=80?'İyi':'Gelişmeli'}</td></tr>` }).join('');
 
-                    const failedTopics = Object.keys(topicStats).filter(t => (topicStats[t].earned / topicStats[t].possible) * 100 < 50);
-                    document.getElementById('smartRecommendations').innerHTML = failedTopics.length > 0 ? `<div class="bg-red-50 p-2 border border-red-200 text-red-700 rounded"><i class="fas fa-exclamation-triangle mr-2"></i><strong>Anlaşılmayan Konular:</strong> ${failedTopics.join(', ')}</div>` : `<div class="bg-green-50 p-2 border border-green-200 text-green-700 rounded"><i class="fas fa-check mr-2"></i>Tüm konularda baraj geçildi.</div>`;
+                    const failedTopics = Object.keys(topicStats).filter(t=> (topicStats[t].earned / topicStats[t].possible)*100 < 50);
+                    document.getElementById('smartRecommendations').innerHTML = failedTopics.length>0 ? `<div class="bg-red-50 p-2 border border-red-200 text-red-700 rounded"><i class="fas fa-exclamation-triangle mr-2"></i><strong>Anlaşılmayan Konular:</strong> ${failedTopics.join(', ')}</div>` : `<div class="bg-green-50 p-2 border border-green-200 text-green-700 rounded"><i class="fas fa-check mr-2"></i>Tüm konularda baraj geçildi.</div>`;
 
-                    document.getElementById('teacherReportOutput').innerText = `    Bu sınavda ${graded.length} öğrenci değerlendirilmiş olup sınıf ortalaması ${avg} puandır. Başarı oranı %${document.getElementById('statPassRate').innerText.replace('%','')} seviyesindedir. \n    ${failedTopics.length > 0 ? failedTopics.join(', ') + ' konularında eksiklikler tespit edilmiş olup telafi çalışmaları planlanmıştır.' : 'Genel olarak kazanımların edinildiği görülmüştür.'} \n    50 puan altı ${low.length} öğrenci için bireysel önlemler alınacaktır.`;
+                    document.getElementById('teacherReportOutput').innerText = `    Bu sınavda ${graded.length} öğrenci değerlendirilmiş olup sınıf ortalaması ${avg} puandır. Başarı oranı %${document.getElementById('statPassRate').innerText.replace('%','')} seviyesindedir. \n    ${failedTopics.length>0? failedTopics.join(', ')+ ' konularında eksiklikler tespit edilmiş olup telafi çalışmaları planlanmıştır.' : 'Genel olarak kazanımların edinildiği görülmüştür.'} \n    50 puan altı ${low.length} öğrenci için bireysel önlemler alınacaktır.`;
 
-                    setTimeout(() => drawCharts(topicStats, scores), 100);
+                    setTimeout(()=> drawCharts(topicStats, scores), 60);
                 },
-                
-                clearAllData: function() { if(confirm("Tüm veriler silinecek?")) { localStorage.removeItem(SK_STUDENTS); localStorage.removeItem(SK_QUESTIONS); location.reload(); } },
-                
-                init: function() { 
-                    loadFromStorage(); 
-                    if(questions.length===0) this.addQuestionInput(); 
-                    renderQuestions(); 
-                }
+                clearAllData: function(){ if(confirm('Tüm veriler silinecek?')){ localStorage.removeItem(SK_STUDENTS); localStorage.removeItem(SK_QUESTIONS); location.reload(); } },
+                init: function(){ loadFromStorage(); if(questions.length===0) this.addQuestionInput(); renderQuestions(); }
             };
         })();
-        
         window.onload = SystemCore.init.bind(SystemCore);
     </script>
 </body>
 </html>
-
-
-
