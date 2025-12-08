@@ -346,19 +346,13 @@
 
                     setTimeout(() => drawCharts(topicStats, scores), 100);
                 },
-                updateVisitCount: function() {
-                    // DİKKAT: 'kendi-okul-adiniz-ozel-123' kısmını KENDİNİZE ÖZEL bir isimle değiştirin!
-                    // Aksi halde sayaç diğer kullanıcılarla karışır.
-                    const namespace = 'ataturk-anadolu-lisesi-mat-analiz-v1'; 
-                    fetch(`https://api.countapi.xyz/hit/${namespace}/visits`).then(r=>r.json()).then(r=>{ 
-                        const el = document.getElementById('visitCounter'); if(el) el.innerText = r.value; 
-                    }).catch(e=> { if(document.getElementById('visitCounter')) document.getElementById('visitCounter').innerText = "Hata"; });
-                },
+               
                 clearAllData: function() { if(confirm("Tüm veriler silinecek?")) { localStorage.removeItem(SK_STUDENTS); localStorage.removeItem(SK_QUESTIONS); location.reload(); } },
-                init: function() { loadFromStorage(); if(questions.length===0) this.addQuestionInput(); renderQuestions(); this.updateVisitCount(); }
+                init: function() { loadFromStorage(); if(questions.length===0) this.addQuestionInput(); renderQuestions(); }
             };
         })();
         window.onload = SystemCore.init;
     </script>
 </body>
 </html>
+
