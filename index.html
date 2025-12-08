@@ -201,7 +201,7 @@
                 calculateTotalPoints();
             };
 
-            const drawCharts = (topicData, scores) => {
+          const drawCharts = (topicData, scores) => {
                 const ctxTopic = document.getElementById('topicChart').getContext('2d');
                 const labels = Object.keys(topicData);
                 const data = labels.map(t => topicData[t].possible === 0 ? 0 : ((topicData[t].earned / topicData[t].possible) * 100).toFixed(1));
@@ -210,7 +210,23 @@
                 topicChartInstance = new Chart(ctxTopic, {
                     type: 'bar',
                     data: { labels: labels, datasets: [{ label: 'Başarı %', data: data, backgroundColor: 'rgba(59, 130, 246, 0.7)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1, barPercentage: 0.6 }] },
-                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { min: 0, max: 100 } } }
+                    options: { 
+                        indexAxis: 'y', 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { display: false } 
+                        },
+                        // ✅ BU BLOK EKLENDİ/GÜNCELLENDİ: Etiketler için soldan 80px boşluk ayırır
+                        layout: {
+                            padding: {
+                                left: 80 
+                            }
+                        }, 
+                        scales: { 
+                            x: { min: 0, max: 100 } 
+                        } 
+                    }
                 });
 
                 const ctxDist = document.getElementById('distributionChart').getContext('2d');
@@ -224,7 +240,6 @@
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
                 });
             };
-
             return {
                 showSection: function(id) {
                     ['setup', 'entry', 'analysis'].forEach(i => {
@@ -340,3 +355,4 @@
     </script>
 </body>
 </html>
+
