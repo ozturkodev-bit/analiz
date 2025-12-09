@@ -245,13 +245,19 @@
 
            // --- YENİ EKLENECEK KISIM (BAŞLANGIÇ) ---
 
-            // Yardımcı: Uzun metinleri kelimelere göre böler
-            const formatLabel = (str, maxLen = 25) => {
+           // --- GÜNCELLENMİŞ KOD (BAŞLANGIÇ) ---
+
+            // DEĞİŞİKLİK 1: Satır genişliğini 25'ten 15'e düşürdük. 
+            // Böylece yazı daha sık aşağı kayar ve sola sığar.
+            const formatLabel = (str, maxLen = 15) => {
                 if (!str) return '';
+                // Eğer kelime tek başına çok uzunsa onu bile bölmek gerekebilir ama şimdilik bu yeterli
                 if (str.length <= maxLen) return str;
+                
                 const words = str.split(' ');
                 const lines = [];
                 let currentLine = words[0];
+
                 for (let i = 1; i < words.length; i++) {
                     if (currentLine.length + 1 + words[i].length <= maxLen) {
                         currentLine += ' ' + words[i];
@@ -272,9 +278,10 @@
                 const formattedLabels = rawLabels.map(label => formatLabel(label));
                 const data = rawLabels.map(t => topicData[t].possible === 0 ? 0 : ((topicData[t].earned / topicData[t].possible) * 100).toFixed(1));
 
-                // DİNAMİK YÜKSEKLİK AYARI (Konu sayısına göre uzar)
+                // DİNAMİK YÜKSEKLİK: Satır sayısı arttığı için çubuk başına düşen payı artırdık (45px -> 60px)
                 const container = document.getElementById('topicChart').parentElement;
-                const newHeight = Math.max(250, rawLabels.length * 45); 
+                // Yazılar artık 3-4 satır olabileceği için her konuya daha çok yer veriyoruz:
+                const newHeight = Math.max(300, rawLabels.length * 60); 
                 container.style.height = newHeight + 'px';
                 container.classList.remove('chart-h-40'); 
 
@@ -286,25 +293,35 @@
                         indexAxis: 'y', 
                         responsive: true, 
                         maintainAspectRatio: false,
-                        layout: { padding: { left: 10, right: 20 } },
+                        // DEĞİŞİKLİK 2: Layout padding ayarını kaldırdık veya otomatiğe bıraktık, 
+                        // Chart.js artık alanı kendi hesaplayacak.
+                        layout: { 
+                            padding: { left: 0, right: 20, top: 20, bottom: 20 } 
+                        },
                         plugins: { 
                             legend: { display: false },
                             tooltip: {
                                 callbacks: {
                                     title: function(context) {
-                                        return rawLabels[context[0].dataIndex]; // Tooltipte tam metni göster
+                                        return rawLabels[context[0].dataIndex]; // Mouse üzerine gelince TAM metni göster
                                     }
                                 }
                             }
                         },
                         scales: { 
                             x: { min: 0, max: 100, grid: { color: '#f1f5f9' } }, 
-                            y: { ticks: { font: { size: 11, weight: 'bold' }, autoSkip: false } } 
+                            y: { 
+                                ticks: { 
+                                    font: { size: 10, weight: 'bold' }, // Yazı puntusunu 11'den 10'a çektik
+                                    autoSkip: false,
+                                    crossAlign: 'far' // Yazıları eksene tam hizalar
+                                } 
+                            } 
                         }
                     }
                 });
 
-                // Not Dağılım Grafiği (Renkli ve Açıklamalı)
+                // Not Dağılım Grafiği (Aynı kaldı)
                 const ctxDist = document.getElementById('distributionChart').getContext('2d');
                 const dist = [0,0,0,0];
                 scores.forEach(s => { if (s < 50) dist[0]++; else if (s < 70) dist[1]++; else if (s < 85) dist[2]++; else dist[3]++; });
@@ -324,7 +341,8 @@
                     } 
                 });
             };
-            
+
+            // --- GÜNCELLENMİŞ KOD (BİTİŞ) ---
             // --- YENİ EKLENECEK KISIM (BİTİŞ) ---
             return {
                 showSection: function(id) {
@@ -384,6 +402,7 @@
     </script>
 </body>
 </html>
+
 
 
 
