@@ -243,29 +243,89 @@
                 calculateTotalPoints();
             };
 
+           // --- YENİ EKLENECEK KISIM (BAŞLANGIÇ) ---
+
+            // Yardımcı: Uzun metinleri kelimelere göre böler
+            const formatLabel = (str, maxLen = 25) => {
+                if (!str) return '';
+                if (str.length <= maxLen) return str;
+                const words = str.split(' ');
+                const lines = [];
+                let currentLine = words[0];
+                for (let i = 1; i < words.length; i++) {
+                    if (currentLine.length + 1 + words[i].length <= maxLen) {
+                        currentLine += ' ' + words[i];
+                    } else {
+                        lines.push(currentLine);
+                        currentLine = words[i];
+                    }
+                }
+                lines.push(currentLine);
+                return lines;
+            };
+
             const drawCharts = (topicData, scores) => {
                 const ctxTopic = document.getElementById('topicChart').getContext('2d');
-                const labels = Object.keys(topicData);
-                const data = labels.map(t => topicData[t].possible === 0 ? 0 : ((topicData[t].earned / topicData[t].possible) * 100).toFixed(1));
+                
+                // Konu isimlerini formatla
+                const rawLabels = Object.keys(topicData);
+                const formattedLabels = rawLabels.map(label => formatLabel(label));
+                const data = rawLabels.map(t => topicData[t].possible === 0 ? 0 : ((topicData[t].earned / topicData[t].possible) * 100).toFixed(1));
+
+                // DİNAMİK YÜKSEKLİK AYARI (Konu sayısına göre uzar)
+                const container = document.getElementById('topicChart').parentElement;
+                const newHeight = Math.max(250, rawLabels.length * 45); 
+                container.style.height = newHeight + 'px';
+                container.classList.remove('chart-h-40'); 
 
                 if (topicChartInstance) topicChartInstance.destroy();
                 topicChartInstance = new Chart(ctxTopic, {
                     type: 'bar',
-                    data: { labels: labels, datasets: [{ label: 'Başarı %', data: data }] },
+                    data: { labels: formattedLabels, datasets: [{ label: 'Başarı %', data: data, backgroundColor: '#3b82f6', borderRadius: 4 }] },
                     options: {
-                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { x: { min: 0, max: 100 }, y: { ticks: { font: { size: 11 } } } }
+                        indexAxis: 'y', 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        layout: { padding: { left: 10, right: 20 } },
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: function(context) {
+                                        return rawLabels[context[0].dataIndex]; // Tooltipte tam metni göster
+                                    }
+                                }
+                            }
+                        },
+                        scales: { 
+                            x: { min: 0, max: 100, grid: { color: '#f1f5f9' } }, 
+                            y: { ticks: { font: { size: 11, weight: 'bold' }, autoSkip: false } } 
+                        }
                     }
                 });
 
+                // Not Dağılım Grafiği (Renkli ve Açıklamalı)
                 const ctxDist = document.getElementById('distributionChart').getContext('2d');
                 const dist = [0,0,0,0];
                 scores.forEach(s => { if (s < 50) dist[0]++; else if (s < 70) dist[1]++; else if (s < 85) dist[2]++; else dist[3]++; });
+                
                 if (distChartInstance) distChartInstance.destroy();
-                distChartInstance = new Chart(ctxDist, { type: 'bar', data: { labels: ['0-49','50-69','70-84','85-100'], datasets: [{ data: dist }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 } } } } });
+                distChartInstance = new Chart(ctxDist, { 
+                    type: 'bar', 
+                    data: { 
+                        labels: ['0-49 (Tekrar)', '50-69 (Orta)', '70-84 (İyi)', '85-100 (Çok İyi)'], 
+                        datasets: [{ data: dist, backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'] }] 
+                    }, 
+                    options: { 
+                        responsive:true, 
+                        maintainAspectRatio:false, 
+                        plugins:{ legend:{display:false} }, 
+                        scales:{ y:{ beginAtZero:true, ticks:{ stepSize: 1 } } } 
+                    } 
+                });
             };
-
+            
+            // --- YENİ EKLENECEK KISIM (BİTİŞ) ---
             return {
                 showSection: function(id) {
                     ['setup','entry','analysis'].forEach(i=>{ document.getElementById('section-'+i).classList.add('hidden'); document.getElementById('nav-'+i).classList.remove('step-active'); document.getElementById('nav-'+i).classList.add('step-inactive'); });
@@ -324,6 +384,7 @@
     </script>
 </body>
 </html>
+
 
 
 
